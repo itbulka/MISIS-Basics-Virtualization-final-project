@@ -1,7 +1,8 @@
 # Докеризация приложения
+За основу взял учебный проект КупиПодариДай. API для сервиса купиПодариДай разрабатывал сам и подготовленный frontend  
 
-Перед тем как приступить к выполнению проектной работы разместите в репозитории исходный код фронтенд и бэкенд частей сервиса КупиПодариДай, реализованного вами ранее.
+Исходные репозитории:  
+`Backend`: https://github.com/itbulka/kupipodariday-backend  
+`Frontend`: https://github.com/yandex-praktikum/kupipodariday-frontend
 
-IP адрес 158.160.129.187
-Frontend https://kovalskij.nomorepartiesco.ru
-Backend https://api.kovalskij.nomorepartiesco.ru
+### Ход работы:
