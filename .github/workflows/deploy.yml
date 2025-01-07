@@ -39,7 +39,7 @@ jobs:
           SSH_SERVER_IP: ${{ secrets.SSH_SERVER_IP }}
           SSH_USER: ${{ secrets.SSH_USER }}
         run: |
-          ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_SERVER_IP "mkdir -p ~/app"
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $SSH_USER@$SSH_SERVER_IP "mkdir -p ~/app"
           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa docker-compose.yml $SSH_USER@$SSH_SERVER_IP:~/app/docker-compose.yml
 
       - name: Create .env on server
