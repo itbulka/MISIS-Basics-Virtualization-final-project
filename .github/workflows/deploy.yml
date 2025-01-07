@@ -29,18 +29,21 @@ jobs:
           docker build -t ${{ secrets.DOCKER_USER }}/frontend:latest ./frontend
           docker push ${{ secrets.DOCKER_USER }}/frontend:latest
 
+      - name: Get SSH Key and set permissions
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+
       - name: Upload docker-compose.yml to server
         env:
           SSH_SERVER_IP: ${{ secrets.SSH_SERVER_IP }}
-          SSH_KEY: ${{ secrets.SSH_KEY }}
           SSH_USER: ${{ secrets.SSH_USER }}
         run: |
-          scp -i $SSH_KEY docker-compose.yml $SSH_USER@$SSH_SERVER_IP:~/app/
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa docker-compose.yml $SSH_USER@$SSH_SERVER_IP:~/app/docker-compose.yml
 
       - name: Create .env on server
         env:
           SSH_SERVER_IP: ${{ secrets.SSH_SERVER_IP }}
-          SSH_KEY: ${{ secrets.SSH_KEY }}
           SSH_USER: ${{ secrets.SSH_USER }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
@@ -50,7 +53,7 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           PGDATA: ${{ secrets.PGDATA }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@$SSH_SERVER_IP << EOF
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $SSH_USER@$SSH_SERVER_IP << EOF
           mkdir -p ~/app
           echo "JWT_SECRET=$JWT_SECRET" > ~/app/.env
           echo "POSTGRES_HOST=$POSTGRES_HOST" >> ~/app/.env
@@ -67,7 +70,7 @@ jobs:
           SSH_KEY: ${{ secrets.SSH_KEY }}
           SSH_USER: ${{ secrets.SSH_USER }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@$SSH_SERVER_IP << EOF
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $SSH_USER@$SSH_SERVER_IP << EOF
           cd ~/app
           docker-compose down
           docker-compose pull
