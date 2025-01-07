@@ -10,6 +10,7 @@ services:
       - backend
 
   backend:
+    image: a0xa0x/backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -22,8 +23,10 @@ services:
       - postgres
     networks:
       - backend
+      - shared
 
   frontend:
+    image: a0xa0x/frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -33,9 +36,11 @@ services:
       - "8081:80"
     networks:
       - frontend
+      - shared
 
 volumes:
   postgres_data:
 networks:
   backend:
   frontend:
+  shared:

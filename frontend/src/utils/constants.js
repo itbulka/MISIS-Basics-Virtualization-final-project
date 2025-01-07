@@ -1,4 +1,4 @@
-export const URL = 'http://api.kovalskij.nomorepartiesco.ru';
+export const URL = 'http://84.201.181.131:4000';
 
 export const MINIMUM_PASSWORD_LENGTH = 3;
 export const MINIMUM_USERNAME_LENGTH = 3;

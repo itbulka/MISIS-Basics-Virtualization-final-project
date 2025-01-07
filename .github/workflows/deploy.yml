@@ -1,0 +1,75 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push backend image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USER }}/backend:latest ./backend
+          docker push ${{ secrets.DOCKER_USER }}/backend:latest
+
+      - name: Build and push frontend image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USER }}/frontend:latest ./frontend
+          docker push ${{ secrets.DOCKER_USER }}/frontend:latest
+
+      - name: Upload docker-compose.yml to server
+        env:
+          SSH_SERVER_IP: ${{ secrets.SSH_SERVER_IP }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          scp -i $SSH_KEY docker-compose.yml $SSH_USER@$SSH_SERVER_IP:~/app/
+
+      - name: Create .env on server
+        env:
+          SSH_SERVER_IP: ${{ secrets.SSH_SERVER_IP }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          PGDATA: ${{ secrets.PGDATA }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@$SSH_SERVER_IP << EOF
+          mkdir -p ~/app
+          echo "JWT_SECRET=$JWT_SECRET" > ~/app/.env
+          echo "POSTGRES_HOST=$POSTGRES_HOST" >> ~/app/.env
+          echo "POSTGRES_PORT=$POSTGRES_PORT" >> ~/app/.env
+          echo "POSTGRES_DB=$POSTGRES_DB" >> ~/app/.env
+          echo "POSTGRES_USER=$POSTGRES_USER" >> ~/app/.env
+          echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" >> ~/app/.env
+          echo "PGDATA=$PGDATA" >> ~/app/.env
+          EOF
+
+      - name: Deploy services on server
+        env:
+          SSH_SERVER_IP: ${{ secrets.SSH_SERVER_IP }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@$SSH_SERVER_IP << EOF
+          cd ~/app
+          docker-compose down
+          docker-compose pull
+          docker-compose up -d
+          EOF
